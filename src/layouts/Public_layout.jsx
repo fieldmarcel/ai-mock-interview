@@ -2,7 +2,7 @@ import React from 'react'
 import { Outlet } from 'react-router-dom'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
-const PublicLayout = () => {
+const Public_layout = () => {
   return (
     <div className='w-full'>
 <Header/>
@@ -15,4 +15,4 @@ const PublicLayout = () => {
   )
 }
 
-export default PublicLayout
+export default Public_layout
