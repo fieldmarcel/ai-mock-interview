@@ -1,10 +1,9 @@
 import React from 'react'
 import { UserButton } from '@clerk/clerk-react'
-
-const Homepage = () => {
+const User = () => {
   return (
-    <div>Homepage<UserButton/></div>
+    <div><UserButton/></div>
   )
 }
 
-export default Homepage
+export default User ;

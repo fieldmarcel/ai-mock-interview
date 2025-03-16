@@ -1,10 +1,10 @@
 import React from 'react'
 import { SignIn } from '@clerk/clerk-react'
 
-const Login = () => {
+const LoginPage = () => {
   return (
-    <div><SignIn /></div>
+    <div><SignIn  path='/login'/></div>
   )
 }
 
-export default Login
+export default LoginPage

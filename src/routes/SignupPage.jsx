@@ -1,10 +1,10 @@
 import React from 'react'
 import { SignUp } from '@clerk/clerk-react'
 
-const Signup = () => {
+const SignupPage = () => {
   return (
-    <div><SignUp /></div>
+    <SignUp path='/signup' />
   )
 }
 
-export default Signup
+export default SignupPage

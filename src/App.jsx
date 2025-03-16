@@ -1,30 +1,44 @@
 import React from "react";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Public_layout from "./layouts/Public_layout";
 import Homepage from "./routes/Homepage";
-import Auth_layout from "./layouts/Auth_layout";
-import Login from "./routes/Login";
-import Signup from "./routes/Signup";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import LoginPage from "./routes/LoginPage";
+import SignupPage from "./routes/SignupPage";
+import User from "./routes"
+import Protected from "./layouts/Protected-routes";
 const App = () => {
   return (
     <div>
       <Router>
         <Routes>
-          {/* //public route */}
-          <Route element={<Public_layout />}>
-            <Route index element={<Homepage />} />
-            {/* <Route path="/" element={<Homepage />} /> both are same */}
-            </Route>
+          {/* Public Routes */}
+          <Route
+            path="/" element={
+              <div className="w-full">
+                <Header />
+                <Homepage />
+                <Footer />
+              </div>
+            }
+          />
 
-
-{/* auth protected route */}
-
-<Route element= {<Auth_layout/>}/>
-<Route path="/login" element={<Login/>}/>
-<Route path="/signup" element={<Signup/>}/>
-
-          {/* protected route */}
+          {/* Auth Protected Routes */}
+          <Route
+            path="/login" element={ <div><LoginPage /> </div> }/>
+          <Route
+            path="/signup" element={ <div><SignupPage /></div> }/>
+          <Route
+            path="/user" element={ <div><User /></div> }/>
+        
+        
+         {/* Protected Route */}
+         <Route path="/protected" element={
+            <Protected/>
+             
+          } />
+        
         </Routes>
       </Router>
     </div>
