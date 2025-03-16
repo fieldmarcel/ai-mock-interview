@@ -6,7 +6,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import LoginPage from "./routes/LoginPage";
 import SignupPage from "./routes/SignupPage";
-import User from "./routes"
+import User from "./routes/User"
 import Protected from "./layouts/Protected-routes";
 const App = () => {
   return (
