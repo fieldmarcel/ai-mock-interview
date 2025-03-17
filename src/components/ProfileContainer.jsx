@@ -8,8 +8,8 @@ const ProfileContainer = () => {
 const {user,isSignedIn}= useUser()
   return (
     <div className="flex items-center space-x-4">
-      <div className="relative">
-{    isSignedIn ?    <UserButton afterSignOutUrl="/" /> : <Link to="/login"><button> Login</button></Link>
+      <div className="relative hidden sm:block ">
+{    isSignedIn ?    <UserButton afterSignOutUrl="/" className="" /> : <Link to="/login"><button> Login</button></Link>
 }      </div>
 
 {  isSignedIn &&(<span className="hidden sm:inline-block md:inline-block text-gray-700 font-medium">{ user?.firstName}</span>)    
