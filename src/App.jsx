@@ -8,6 +8,7 @@ import LoginPage from "./routes/LoginPage";
 import SignupPage from "./routes/SignupPage";
 import User from "./routes/User"
 import Protected from "./layouts/Protected-routes";
+import Container from "./components/Container";
 const App = () => {
   return (
     <div>
@@ -19,6 +20,7 @@ const App = () => {
               <div className="w-full">
                 <Header />
                 <Homepage />
+                
                 <Footer />
               </div>
             }
