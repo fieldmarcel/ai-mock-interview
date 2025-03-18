@@ -4,6 +4,76 @@
 
 @custom-variant dark (&:is(.dark *));
 
+body {
+  background: white;
+  position: relative;
+}
+
+/* Grid background */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  height: 100%;
+  width: 100%;
+  background-image: 
+    linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+    linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+  background-size: 6rem 4rem;
+  pointer-events: none;
+}
+
+/* Blurred gradient background */
+body::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 500px;
+  width: 500px;
+  transform: translate(-30%, 20%);
+  border-radius: 50%;
+  background: rgba(173, 109, 244, 0.5);
+  opacity: 0.5;
+  filter: blur(80px);
+  z-index: -5;
+  pointer-events: none;
+}
+
+
+ /* bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]">absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_200px,#C9EBFF,transparent)]" */
+
+ /* <div class="absolute top-0 -z-10 h-full w-full bg-white"><div class="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-[rgba(173,109,244,0.5)] opacity-50 blur-[80px]"></div></div> */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.13 0.028 261.692);
@@ -122,4 +192,4 @@
     @apply bg-background text-foreground;
   }
 }
-
+ */

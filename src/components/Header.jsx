@@ -9,7 +9,7 @@ import ToggleContainer from './ToggleContainer'
 const Header = () => {
   
   return (
-    <header className="bg-1/2 shadow py-2  w-full top-0 z-10">
+    <header className="   py-2   top-0 z-10">
       <Container>
         <div className="flex items-center justify-between">
           {/* Logo section */}

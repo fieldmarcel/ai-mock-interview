@@ -5,7 +5,7 @@ const NavContainer = () => {
 
     const { userId } = useAuth()
   return (
-    <nav className="flex space-x-8 justify-center">
+    <nav className="  flex space-x-8 justify-center">
       <Link
         to="/"
         className="text-gray-700 hover:text-pink-600 transition duration-300 font-medium"

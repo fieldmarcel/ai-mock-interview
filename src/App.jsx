@@ -7,18 +7,21 @@ import Footer from "./components/Footer";
 import LoginPage from "./routes/LoginPage";
 import SignupPage from "./routes/SignupPage";
 import User from "./routes/User"
-import Protected from "./layouts/Protected-routes";
-import Container from "./components/Container";
+import Dashboard from "./routes/Dashboard";
+// import Protected from "./layouts/Protected-routes";
+// import Container from "./components/Container";
 const App = () => {
   return (
     <div>
-      <Router>
+      <Router>       
+           <Header />
+
         <Routes>
           {/* Public Routes */}
+
           <Route
             path="/" element={
               <div className="w-full">
-                <Header />
                 <Homepage />
                 
                 <Footer />
@@ -36,8 +39,8 @@ const App = () => {
         
         
          {/* Protected Route */}
-         <Route path="/protected" element={
-            <Protected/>
+         <Route path="/generate" element={
+            <Dashboard/>
              
           } />
         
