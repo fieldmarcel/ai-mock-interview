@@ -17,15 +17,12 @@ const AuthHandler = () => {
       if (isSignedIn && user) {
         setLoading(false);
         try {
-          // Get the user reference from Firestore
           const userRef = db.collection("users").doc(user.id);
 
-          // Get the user data directly
           const userSnapshot = await userRef.get();
 
-          // Check if the user already exists
           if (!userSnapshot.exists) {
-            // User data object
+
             const userData = {
               id: user.id,
               name: user.firstName || "N/A",
@@ -35,11 +32,10 @@ const AuthHandler = () => {
               updatedAt: new Date()
             };
 
-            // Insert the new user data
             await userRef.set(userData, { merge: true });
             console.log("User created successfully:", userData);
           } else {
-            // User already exists, log the existing data
+
             console.log("User already exists:", userSnapshot.data());
           }
         } catch (error) {

@@ -8,6 +8,7 @@ import LoginPage from "./routes/LoginPage";
 import SignupPage from "./routes/SignupPage";
 import User from "./routes/User"
 import Dashboard from "./routes/Dashboard";
+import CreateForm from "./routes/CreateForm";
 // import Protected from "./layouts/Protected-routes";
 // import Container from "./components/Container";
 const App = () => {
@@ -39,11 +40,8 @@ const App = () => {
         
         
          {/* Protected Route */}
-         <Route path="/generate" element={
-            <Dashboard/>
-             
-          } />
-        
+         <Route path="/generate" element={<Dashboard/>} />
+          <Route path="/generate/:interviewId" element={<CreateForm />} />
         </Routes>
       </Router>
     </div>
