@@ -21,3 +21,64 @@ const CreateForm = () => {
 }
 
 export default CreateForm
+
+
+
+
+// import { collection,addDoc,doc,getDoc, getFirestore } from "firebase/firestore";
+// import { app } from "../config/FirebaseConfig";
+// import React from 'react';
+
+// const firestore = getFirestore(app);
+
+// const CreateForm = () => {
+//   const writedata = async () => {
+//     try {
+//       const doc = await addDoc(collection(firestore, "ai-mock-interviewer"), {
+//         name: "thailand",
+//         country: "esrt",
+//         pincode: "230066"
+//       });
+//       console.log("Document written with ID: ", doc.id);
+//     } catch (error) {
+//       console.error("Error adding document: ", error);
+//     }
+//   };
+
+//   const getdocument = async()=>{
+//     const ref=  doc(firestore, "ai-mock-interviewer/yK0OelZIX5rIJIX4gBEj");
+//     const snap= await getDoc(ref);
+//     console.log("snap",snap.data())
+
+//   }
+
+// const writesubdata=async()=>{
+//   try {
+//     const docRef = await addDoc(collection(firestore, "cities/5jyZLuhyPezNBWHZEPL6/places"), {
+//       city: "delhi",
+//       location: "rajauri garden",
+//       pincode: "110027"
+//     });
+//     console.log("Document written with ID: ", docRef.id);
+//   } catch (error) {
+//     console.error("Error adding document: ", error);
+//   }
+// }
+//   return (
+//     <div>
+//       <h1>Firebase Firestore</h1>
+//       <button className="bg-black text-white" onClick={writedata}>
+//         Add data
+//       </button>
+//       <button className="bg-black text-white" onClick={writesubdata}>
+//         Add subdata
+//       </button>
+//       <button className="bg-black text-white" onClick={getdocument}>
+//         get document
+//       </button>
+//     </div>
+//   );
+// };
+
+
+// export default CreateForm;

@@ -41,7 +41,7 @@ const App = () => {
         
          {/* Protected Route */}
          <Route path="/generate" element={<Dashboard/>} />
-          <Route path="/generate/:interviewId" element={<CreateForm />} />
+          <Route path="/generate/:create" element={<CreateForm />} />
         </Routes>
       </Router>
     </div>
