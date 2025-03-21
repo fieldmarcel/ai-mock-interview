@@ -1,10 +1,10 @@
-import React from 'react'
+// import React from 'react'
 import { useParams } from 'react-router-dom'
 import { useState,useEffect } from 'react'
 import ForMockInterview from '../components/AddNewInterview'
 
 
-const CreateForm = () => {
+// const CreateForm = () => {
     const { interviewId } = useParams()
   const [interview, setInterview] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -37,9 +37,9 @@ fetchInterview();
       <ForMockInterview initialData={interview}/>
     </div>
   )
-}
+// }
 
-export default CreateForm
+// export default CreateForm
 
 
 

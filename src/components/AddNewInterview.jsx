@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { z } from "zod";
-import { PlusCircle, AlertCircle, Briefcase, FileText, Clock } from "lucide-react";
+import { PlusCircle, AlertCircle, Briefcase, FileText, Clock,Loader } from "lucide-react";
 import { Button } from "./ui/Button";
+import { generateResponse } from "../lib/GeminiAiModel";
+ import { collection,addDoc,doc,getDoc, getFirestore } from "firebase/firestore";
+ import { app } from "../config/FirebaseConfig";
 
 // Zod schema for form validation
 const formSchema = z.object({
@@ -16,33 +19,50 @@ const AddNewInterview = () => {
   const [experience, setExperience] = useState(0);
   const [errors, setErrors] = useState({}); // State for validation errors
   const [isSubmitting, setIsSubmitting] = useState(false);
+const [airesponse, setAiResponse] = useState([]);
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
 
-    const formData = { role, description, experience: Number(experience) };
+  const handleSubmit =async (e) => {
+  try {
+      e.preventDefault();
+      setIsSubmitting(true);
+      
+      const promptData =`jobrole- ${role}  job-description-${description}, experenice - ${experience} years ...depending on jobrole, job description , and years of experience provide us 10 interview questions an answers based in JSON format`
+      const result = await generateResponse(promptData);
+      console.log(result);
+      setAiResponse(result);
+setRole("")
+setDescription("")
+setExperience(0)
+ const resp= await addDoc(collection(firestore, "ai-mock-interviewer"), {
 
-    try {
-      formSchema.parse(formData); // Validate form data
-      setErrors({}); // Clear errors if validation passes
-      console.log("Form is valid:", formData);
-      // Simulate API call or form submission
-      setTimeout(() => {
+  
+ })
+      const formData = { role, description, experience: Number(experience) };
+  
+      try {
+        formSchema.parse(formData); // Validate form data
+        setErrors({}); // Clear errors if validation passes
+        console.log("Form is valid:", formData);
+        // Simulate API call or form submission
+        setTimeout(() => {
+          setIsSubmitting(false);
+          alert("Interview created successfully!");
+        }, 2000);
+      } catch (error) {
+        const validationErrors = {};
+        error.errors.forEach((err) => {
+          validationErrors[err.path[0]] = err.message;
+        });
+        setErrors(validationErrors); // Set errors for display
+        console.error("Validation Error:", error);
         setIsSubmitting(false);
-        alert("Interview created successfully!");
-      }, 2000);
-    } catch (error) {
-      const validationErrors = {};
-      error.errors.forEach((err) => {
-        validationErrors[err.path[0]] = err.message;
-      });
-      setErrors(validationErrors); // Set errors for display
-      console.error("Validation Error:", error);
-      setIsSubmitting(false);
+      }
     }
-  };
+   catch (error) {
+    console.log(error)
+  }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center  p-6">
@@ -158,17 +178,17 @@ const AddNewInterview = () => {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-36 p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-3xl hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
+            className="w-48 p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-3xl hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
           >
             {isSubmitting ? (
               <>
                 <span className="animate-spin mr-2">
                   <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <Loader className="opacity-25 " ></Loader>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 </span>
-                Submitting...
+                Generating from AI
               </>
             ) : (
               "Create Interview"
