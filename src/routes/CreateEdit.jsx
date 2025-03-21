@@ -1,7 +1,7 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
 import { useState,useEffect } from 'react'
-
+import ForMockInterview from '../components/AddNewInterview'
 
 
 const CreateForm = () => {
@@ -9,13 +9,32 @@ const CreateForm = () => {
   const [interview, setInterview] = useState(null)
     const [loading, setLoading] = useState(true)
 
+useEffect(() => {
+
+const fetchInterview = async () => {
+  if(interviewId) {
+    try {
+      const interviewDoc = await getDoc(doc(db,"interviews",interviewId));
+      if(interviewDoc.exists()){
+        setInterview({...interviewDoc.data()})
+        setLoading(false)
+      }
+    } catch (error) {
+      console.log("Error getting document:", error);
+    }
+   
+  }
+}
+
+fetchInterview();
+
+}, [interviewId])
+
+
+
   return (
-    <div>
-
-
-
-  
-
+    <div className='my-4 flex-col w-full'>
+      <ForMockInterview initialData={interview}/>
     </div>
   )
 }

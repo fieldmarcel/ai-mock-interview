@@ -7,6 +7,10 @@
 body {
   background: white;
   position: relative;
+  background-image: 
+    linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+    linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+  background-size: 6rem 4rem;
 }
 
 /* Grid background */
@@ -15,12 +19,12 @@ body::before {
   position: absolute;
   inset: 0;
   z-index: -10;
-  height: 100%;
+  
   width: 100%;
-  background-image: 
+  /* background-image: 
     linear-gradient(to right, #f0f0f0 1px, transparent 1px),
     linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
-  background-size: 6rem 4rem;
+  background-size: 6rem 4rem; */
   pointer-events: none;
 }
 
