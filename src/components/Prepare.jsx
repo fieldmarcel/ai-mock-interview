@@ -5,7 +5,7 @@ import { Button } from './ui/Button';
 import { doc, getDoc } from 'firebase/firestore';
 import { useParams } from 'react-router-dom';
 import { db } from '../config/FirebaseConfig';
-const InterviewPreparationPage = () => {
+const InterviewPreparationPage = ({onStartInterview }) => {
   const [webcamEnabled, setWebcamEnabled] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [interview, setInterview] = useState("")
@@ -47,6 +47,7 @@ const InterviewPreparationPage = () => {
              <h2 className="text-2xl font-bold text-gray-900 mb-6">Prepare for Your Interview</h2>
       <div className="flex justify-center">
               <Button 
+              onClick={onStartInterview }
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-lg shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!webcamEnabled}
               >
@@ -72,11 +73,11 @@ const InterviewPreparationPage = () => {
               </div>
               <div>
                 <p className="text-gray-500 text-sm mb-1">Experience</p>
-                <p className="text-gray-900 font-medium">{interview.experience}</p>
+                <p className="text-gray-900 font-medium">{interview.experience} years</p>
               </div>
               <div>
                 <p className="text-gray-500 text-sm mb-1">Number of Questions</p>
-                <p className="text-gray-900 font-medium">{10}</p>
+                <p className="text-gray-900 font-medium">{10} Questions</p>
               </div>
             </div>
           </div>
@@ -234,6 +235,7 @@ const InterviewPreparationPage = () => {
             
             <div className="flex justify-center">
               <Button 
+                   onClick={onStartInterview }
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-lg shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!webcamEnabled}
               >

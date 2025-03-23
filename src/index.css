@@ -1,19 +1,20 @@
 @import "tailwindcss";
-
 @plugin "tailwindcss-animate";
-
 @custom-variant dark (&:is(.dark *));
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat+Underline:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&display=swap');@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat+Underline:ital,wght@0,100..900;1,100..900&display=swap');
 body {
-  font-family: "Inter", sans-serif;
-  font-optical-sizing: auto;
+  font-family: "Outfit", sans-serif;
+    font-optical-sizing: auto;
   font-weight: 200;
   font-style: normal;
-  background: white;
+  background: rgb(243, 247, 250);
   position: relative;
   background-image: 
-    linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-    linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+    linear-gradient(to right, #c5dfef 1px, transparent 1px),
+    linear-gradient(to bottom, #c5dfef 1px, transparent 1px);
   background-size: 6rem 4rem;
 }
 
@@ -38,18 +39,39 @@ body::after {
   position: absolute;
   right: 0;
   top: 0;
-  height: 500px;
-  width: 500px;
-  transform: translate(-30%, 20%);
+  height: 600px;
+  width: 600px;
+  transform: translate(-30%, 10%);
   border-radius: 50%;
-  background: rgba(173, 109, 244, 0.5);
-  opacity: 0.5;
-  filter: blur(80px);
+  background: rgba(185, 140, 236, 0.5);
+  opacity: 0.9;
+  filter: blur(70px);
+  z-index: -5;
+  pointer-events: none;
+}
+body::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 600px;
+  width: 600px;
+  transform: translate(30%, 60%);
+  border-radius: 50%;
+  background: rgba(137, 157, 231, 0.5); /* Different color for distinction */
+  opacity: 0.9;
+  filter: blur(70px);
   z-index: -5;
   pointer-events: none;
 }
 
+.logofont{
+  font-family: "Cinzel", serif;
 
+  font-optical-sizing: auto;
+  font-weight: 200;
+  font-style: normal;
+}
  /* bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]">absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_200px,#C9EBFF,transparent)]" */
 
  /* <div class="absolute top-0 -z-10 h-full w-full bg-white"><div class="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-[rgba(173,109,244,0.5)] opacity-50 blur-[80px]"></div></div> */
