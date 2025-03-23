@@ -1,42 +1,42 @@
 // import React from 'react'
-import { useParams } from 'react-router-dom'
-import { useState,useEffect } from 'react'
-import ForMockInterview from '../components/AddNewInterview'
+// import { useParams } from 'react-router-dom'
+// import { useState,useEffect } from 'react'
+// import ForMockInterview from '../components/AddNewInterview'
 
 
 // const CreateForm = () => {
-    const { interviewId } = useParams()
-  const [interview, setInterview] = useState(null)
-    const [loading, setLoading] = useState(true)
+//     const { interviewId } = useParams()
+//   const [interview, setInterview] = useState(null)
+//     const [loading, setLoading] = useState(true)
 
-useEffect(() => {
+// useEffect(() => {
 
-const fetchInterview = async () => {
-  if(interviewId) {
-    try {
-      const interviewDoc = await getDoc(doc(db,"interviews",interviewId));
-      if(interviewDoc.exists()){
-        setInterview({...interviewDoc.data()})
-        setLoading(false)
-      }
-    } catch (error) {
-      console.log("Error getting document:", error);
-    }
+// const fetchInterview = async () => {
+//   if(interviewId) {
+//     try {
+//       const interviewDoc = await getDoc(doc(db,"interviews",interviewId));
+//       if(interviewDoc.exists()){
+//         setInterview({...interviewDoc.data()})
+//         setLoading(false)
+//       }
+//     } catch (error) {
+//       console.log("Error getting document:", error);
+//     }
    
-  }
-}
+//   }
+// }
 
-fetchInterview();
+// fetchInterview();
 
-}, [interviewId])
+// }, [interviewId])
 
 
 
-  return (
-    <div className='my-4 flex-col w-full'>
-      <ForMockInterview initialData={interview}/>
-    </div>
-  )
+//   return (
+//     <div className='my-4 flex-col w-full'>
+//       <ForMockInterview initialData={interview}/>
+//     </div>
+//   )
 // }
 
 // export default CreateForm

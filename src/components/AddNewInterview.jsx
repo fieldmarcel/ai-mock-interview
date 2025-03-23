@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { z } from "zod";
-import { PlusCircle, AlertCircle, Briefcase, FileText, Clock,Loader } from "lucide-react";
+import { toast } from "sonner"
+import {v4 as uuidv4} from "uuid";
+import { PlusCircle, AlertCircle, Briefcase, FileText, Clock,Loader, Link } from "lucide-react";
 import { Button } from "./ui/Button";
 import { generateResponse } from "../lib/GeminiAiModel";
- import { collection,addDoc,doc,getDoc, getFirestore } from "firebase/firestore";
- import { app } from "../config/FirebaseConfig";
-
+ import { collection,addDoc } from "firebase/firestore";
+ import { db,app } from "../config/FirebaseConfig";
+import { useAuth } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 // Zod schema for form validation
 const formSchema = z.object({
   role: z.string().min(1, "Role is required"),
@@ -14,13 +17,14 @@ const formSchema = z.object({
 });
 
 const AddNewInterview = () => {
+  const {userId} = useAuth();
   const [role, setRole] = useState("");
   const [description, setDescription] = useState("");
   const [experience, setExperience] = useState(0);
   const [errors, setErrors] = useState({}); // State for validation errors
   const [isSubmitting, setIsSubmitting] = useState(false);
 const [airesponse, setAiResponse] = useState([]);
-
+const navigate = useNavigate();
 
   const handleSubmit =async (e) => {
   try {
@@ -34,10 +38,17 @@ const [airesponse, setAiResponse] = useState([]);
 setRole("")
 setDescription("")
 setExperience(0)
- const resp= await addDoc(collection(firestore, "ai-mock-interviewer"), {
-
-  
+ const resp= await addDoc(collection(db, "ai-mock-interviewer"), {
+tempId:uuidv4(),
+role:role,
+description:description,
+experience:experience,
+jsonMockResp:result,
+createdAt: new Date(),
+createdBy: userId
  })
+    console.log("Document written in firebase : ", resp);
+
       const formData = { role, description, experience: Number(experience) };
   
       try {
@@ -47,8 +58,13 @@ setExperience(0)
         // Simulate API call or form submission
         setTimeout(() => {
           setIsSubmitting(false);
-          alert("Interview created successfully!");
-        }, 2000);
+          toast.success("Interview has been created successfully.", {
+            style: {
+              background: "black",
+              color: "white",
+              border: "1px solid #333",
+                },icon: "🎉",});
+              }, 200);
       } catch (error) {
         const validationErrors = {};
         error.errors.forEach((err) => {
@@ -58,6 +74,7 @@ setExperience(0)
         console.error("Validation Error:", error);
         setIsSubmitting(false);
       }
+navigate("/generate")
     }
    catch (error) {
     console.log(error)
@@ -112,7 +129,6 @@ setExperience(0)
             )}
           </div>
 
-          {/* Description Input */}
           <div className="space-y-4">
             <label htmlFor="description" className="text-sm font-medium text-gray-700 flex items-center">
               <FileText className="mr-2" size={18} />
@@ -174,8 +190,7 @@ setExperience(0)
             )}
           </div>
 
-          {/* Submit Button */}
-          <Button
+          <Button 
             type="submit"
             disabled={isSubmitting}
             className="w-48 p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-3xl hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
@@ -194,6 +209,7 @@ setExperience(0)
               "Create Interview"
             )}
           </Button>
+          {/* </Link> */}
         </form>
       </div>
     </div>
