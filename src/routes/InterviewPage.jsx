@@ -5,7 +5,7 @@ import { db } from '../config/FirebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '../components/ui/Button';
 import { toast } from 'sonner';
-import StartInterview from '../components/StartInterview';
+import StartInterview from './StartInterview';
 import { Camera, Mic, MicOff, Timer, MessageSquare, ChevronRight, User, Briefcase, Calendar, Award, X } from 'lucide-react';
 import Prepare from '../components/Prepare';
 const InterviewPage = () => {
@@ -78,15 +78,15 @@ const InterviewPage = () => {
       </Button>
     </div>
   );
-  const handleStartInterview = () => {
-    setCurrentStep('start');
-  };
+  // const handleStartInterview = () => {
+  //   setCurrentStep('start');
+  // };
     const renderCurrentScreen = () => {
     switch (currentStep) {
         case("prepare"):
-        return <Prepare onStartInterview={handleStartInterview}/>
-        case ("start"):
-            return <StartInterview/>
+        return <Prepare />
+        // case ("start"):
+        //     return <StartInterview/>
 
       default:
         return renderIntroScreen();

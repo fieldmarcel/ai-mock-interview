@@ -11,6 +11,7 @@ import Dashboard from "./routes/Dashboard";
 import InterviewPage from "./routes/InterviewPage";
 // import CreateForm from "./routes/CreateEdit.jsx";
 import AddNewInterview from "./components/AddNewInterview";
+import StartInterview from "./routes/StartInterview";
 // import Protected from "./layouts/Protected-routes";
 // import Container from "./components/Container";
 const App = () => {
@@ -45,6 +46,8 @@ const App = () => {
          <Route path="/generate" element={<Dashboard/>} />
           <Route path="/generate/:create" element={<AddNewInterview />} />
           <Route path="/interview/:tempId" element={<InterviewPage />} />
+          <Route path="/interview/:tempId/start" element={<StartInterview />} />
+
 
         </Routes>
       </Router>

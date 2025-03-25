@@ -27,7 +27,7 @@ const ProfileContainer = () => {
 
   if (isSignedIn && user) {
     return (
-      <div className="flex bg-white rounded-full px-4 py-3 items-center space-x-4 shadow-sm border border-gray-100">
+      <div className="   sm:flex  px-4 py-3 items-center ">
         <div className="relative">
           <UserButton afterSignOutUrl="/" />
         </div>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner"
 import {v4 as uuidv4} from "uuid";
-import { PlusCircle, AlertCircle, Briefcase, FileText, Clock,Loader, Link } from "lucide-react";
+import { PlusCircle, AlertCircle, Briefcase, FileText, Clock,Loader, Link, Key } from "lucide-react";
 import { Button } from "./ui/Button";
 import { generateResponse } from "../lib/GeminiAiModel";
  import { collection,addDoc } from "firebase/firestore";
@@ -15,7 +15,6 @@ const formSchema = z.object({
   description: z.string().min(1, "Description is required"),
   experience: z.number().min(0, "Experience must be a positive number"),
 });
-
 const AddNewInterview = () => {
   const {userId} = useAuth();
   const [role, setRole] = useState("");
@@ -26,60 +25,90 @@ const AddNewInterview = () => {
 const [airesponse, setAiResponse] = useState([]);
 const navigate = useNavigate();
 
-  const handleSubmit =async (e) => {
+const handleSubmit = async (e) => {
   try {
-      e.preventDefault();
-      setIsSubmitting(true);
-      
-      const promptData =`jobrole- ${role}  job-description-${description}, experenice - ${experience} years ...depending on jobrole, job description , and years of experience provide us 10 interview questions an answers based in JSON format`
-      const result = await generateResponse(promptData);
-      console.log(result);
-      setAiResponse(result);
-setRole("")
-setDescription("")
-setExperience(0)
- const resp= await addDoc(collection(db, "ai-mock-interviewer"), {
-tempId:uuidv4(),
-role:role,
-description:description,
-experience:experience,
-jsonMockResp:result,
-createdAt: new Date(),
-createdBy: userId
- })
-    console.log("Document written in firebase : ", resp);
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = { role, description, experience: Number(experience) };
 
-      const formData = { role, description, experience: Number(experience) };
-  
-      try {
-        formSchema.parse(formData); // Validate form data
-        setErrors({}); // Clear errors if validation passes
-        console.log("Form is valid:", formData);
-        // Simulate API call or form submission
-        setTimeout(() => {
-          setIsSubmitting(false);
-          toast.success("Interview has been created successfully.", {
-            style: {
-              background: "black",
-              color: "white",
-              border: "1px solid #333",
-                },icon: "🎉",});
-              }, 200);
-      } catch (error) {
-        const validationErrors = {};
-        error.errors.forEach((err) => {
-          validationErrors[err.path[0]] = err.message;
-        });
-        setErrors(validationErrors); // Set errors for display
-        console.error("Validation Error:", error);
+    const promptData = `jobrole- ${role}  job-description-${description}, experience - ${experience} years ...depending on jobrole, job description, and years of experience provide us 10 interview questions and answers based in JSON format`;
+    const result = await generateResponse(promptData);
+
+    const cleanedResult = result.replace(/```json/g, "").replace(/```/g, "").trim();
+    // console.log("The cleanedResult is:", cleanedResult);
+
+    // Validate the JSON structure before parsing
+    try {
+      const parsedData = JSON.parse(cleanedResult);
+      // console.log("The parsedData is:", parsedData);
+
+      const interviewQuestions = parsedData.interviewQuestions;
+      // console.log("The interviewQuestions are:", interviewQuestions);
+
+      const qaPairs = interviewQuestions.map((qa, index) => ({
+        Key: index,
+        question: qa.question,
+        answer: qa.answer,
+      }));
+      console.log("The qaPairs are:", qaPairs);
+
+      setAiResponse(result);
+      setRole("");
+      setDescription("");
+      setExperience(0);
+
+      const resp = await addDoc(collection(db, "ai-mock-interviewer"), {
+        tempId: uuidv4(),
+        role: role,
+        description: description,
+        experience: experience,
+        jsonMockResp: result,
+        qaPairs: qaPairs,
+        createdAt: new Date(),
+        createdBy: userId,
+      });
+      console.log("Document written in Firebase:", resp);
+
+      // Validate form data
+      formSchema.parse(formData);
+      setErrors({});
+      console.log("Form is valid:", formData);
+
+      setTimeout(() => {
         setIsSubmitting(false);
-      }
-navigate("/generate")
+        toast.success("Interview has been created successfully.", {
+          style: {
+            background: "black",
+            color: "white",
+            border: "1px solid #333",
+          },
+          icon: "🎉",
+        });
+      }, 200);
+    } catch (jsonError) {
+      console.error("JSON Parsing Error:", jsonError);
+      toast.error("Failed to parse the AI response. Please try again.", {
+        style: {
+          background: "black",
+          color: "white",
+          border: "1px solid #333",
+        },
+        icon: "❌",
+      });
     }
-   catch (error) {
-    console.log(error)
+  } catch (validationError) {
+    const validationErrors = {};
+    validationError.errors.forEach((err) => {
+      validationErrors[err.path[0]] = err.message;
+    });
+    setErrors(validationErrors);
+    console.error("Validation Error:", validationError);
+  } finally {
+    setIsSubmitting(false);
   }
-}
+
+  navigate("/generate");
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center  p-6">
