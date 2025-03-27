@@ -1,21 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Webcam from 'react-webcam';
 import { useParams } from 'react-router-dom';
 import { db } from '../config/FirebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '../components/ui/Button';
 import { toast } from 'sonner';
-import StartInterview from './StartInterview';
 import { Camera, Mic, MicOff, Timer, MessageSquare, ChevronRight, User, Briefcase, Calendar, Award, X } from 'lucide-react';
 import Prepare from '../components/Prepare';
 const InterviewPage = () => {
   const { tempId } = useParams();
   const [interview, setInterview] = useState(null);
-  const [webcamEnabled, setWebcamEnabled] = useState(false);
   const [currentStep, setCurrentStep] = useState('intro');
-  const [recording, setRecording] = useState(false);
-  const [timeElapsed, setTimeElapsed] = useState(0);
-  const webcamRef = useRef(null);
 
   const getData = async () => {
     try {
