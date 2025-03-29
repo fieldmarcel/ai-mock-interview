@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import Webcam from 'react-webcam';
+import Webcam from "react-webcam";
 import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "../config/FirebaseConfig";
 import {
@@ -18,6 +18,7 @@ import {
   ArrowRight,
   Settings,
   HelpCircle,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -147,28 +148,38 @@ const StartInterview = () => {
               </Button>
             }{" "}
           </div>
+
+          <div className="bg-blue-200">
+            <Lightbulb className="text-red-500"/>
+
+            <h3>Important note</h3>
+            <p>
+             Click on record answer adipisicing elit. Nemo
+              vitae quidem, saepe eveniet porro officiis officia dolores quam
+              doloremque quod voluptas unde, eaque reiciendis neque maiores
+              atque rerum ducimus iusto.
+            </p>
+          </div>
         </div>
       </div>
-      <div> 
-<Webcam
-                    ref={webcamRef}
-                    mirrored={true}
-                    onUserMedia={() => setWebcamEnabled(true)}
-                    onUserMediaError={() => {
-                      setWebcamEnabled(false);
-                      toast.error('Camera error', {
-                        description: 'Could not access your camera. Please check permissions.',
-                      });
-                    }}
-                    className="w-full h-full object-cover"
-                  />      </div>
+      <div>
+        <Webcam
+          ref={webcamRef}
+          mirrored={true}
+          onUserMedia={() => setWebcamEnabled(true)}
+          onUserMediaError={() => {
+            setWebcamEnabled(false);
+            toast.error("Camera error", {
+              description:
+                "Could not access your camera. Please check permissions.",
+            });
+          }}
+          className="w-full h-full object-cover"
+        />{" "}
+      </div>
 
-                  <div>
-
-
-                  </div>
+      <div></div>
     </div>
   );
-
 };
 export default StartInterview;

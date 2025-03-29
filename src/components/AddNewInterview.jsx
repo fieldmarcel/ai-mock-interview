@@ -35,15 +35,15 @@ const handleSubmit = async (e) => {
     const result = await generateResponse(promptData);
 
     const cleanedResult = result.replace(/```json/g, "").replace(/```/g, "").trim();
-    // console.log("The cleanedResult is:", cleanedResult);
+     console.log("The cleanedResult is:", cleanedResult);
 
     // Validate the JSON structure before parsing
     try {
       const parsedData = JSON.parse(cleanedResult);
-      // console.log("The parsedData is:", parsedData);
+       console.log("The parsedData is:", parsedData);
 
       const interviewQuestions = parsedData.interviewQuestions;
-      // console.log("The interviewQuestions are:", interviewQuestions);
+       //console.log("The interviewQuestions are:", interviewQuestions);
 
       const qaPairs = interviewQuestions.map((qa, index) => ({
         Key: index,
