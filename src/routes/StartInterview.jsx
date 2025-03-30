@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import Webcam from "react-webcam";
+import RecordingAnswer from "../components/RecordingAnswer";
 import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "../config/FirebaseConfig";
 import {
@@ -133,18 +134,14 @@ const StartInterview = () => {
               <Button
                 onClick={handlePrevQue}
                 disabled={currentQuestionIndex === 0}
-              >
-                {" "}
-                Prev
+              >Prev
               </Button>
             }
             {
               <Button
                 onClick={handleNextQue}
                 disabled={currentQuestionIndex === questions.length - 1}
-              >
-                {" "}
-                Next
+              >Next
               </Button>
             }{" "}
           </div>
@@ -178,7 +175,7 @@ const StartInterview = () => {
         />{" "}
       </div>
 
-      <div></div>
+      <div><RecordingAnswer/></div>
     </div>
   );
 };
