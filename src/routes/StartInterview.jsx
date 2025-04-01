@@ -217,7 +217,7 @@ const StartInterview = () => {
           ) : (
             <Button onClick={resumeTimer} className="flex-1" disabled={timeRemaining === 0}>
               <Play size={16} className="mr-1" />
-              Resume
+              Resume Now
             </Button>
           )}
           
@@ -239,7 +239,6 @@ const StartInterview = () => {
         </div>
       </div>
 
-      {/* Middle column - Webcam */}
       <div className="w-full md:w-1/3">
         <div className="bg-black rounded-lg overflow-hidden shadow-md aspect-video">
           <Webcam

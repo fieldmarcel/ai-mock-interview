@@ -37,7 +37,7 @@ const saveUserAnswers= async()=>{
 <div>
       <h1>Recording: {isRecording.toString()}</h1>
       <button onClick={isRecording ? stopSpeechToText : startSpeechToText}>
-        {isRecording ? 'Stop Recording' : 'Start Recording'}
+        {isRecording ? 'Stop ' : 'Start Recording'}
       </button>
       <ul>
         {results.map((result) => (
