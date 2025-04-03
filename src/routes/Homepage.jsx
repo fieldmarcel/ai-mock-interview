@@ -47,14 +47,20 @@ const Homepage = () => {
                 <span className="text-sm font-medium text-blue-600">AI-Powered Interview Prep</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
-                Master Your <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">Interview Skills</span> with AI
-              </h1>
-              
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                Prepare for your dream job with personalized AI interviews that adapt to your industry, provide real-time feedback, and help you gain confidence.
-              </p>
-              
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-8 leading-none">
+  Master Your <span className="relative">
+    <span className="bg-gradient-to-r from-blue-500 to-violet-500 text-transparent bg-clip-text">Interview Skills</span>
+    <svg className="absolute w-full h-3 -bottom-1 left-0 text-blue-400/30" viewBox="0 0 200 8" preserveAspectRatio="none">
+      <path d="M0,5 C90,0 150,10 200,5" stroke="currentColor" strokeWidth="3" fill="none" />
+    </svg>
+  </span>
+</h1>
+
+<p className="text-lg md:text-xl max-w-2xl text-gray-600 mb-10 leading-relaxed">
+   Interview preparation that adapts to your industry, delivers instant feedback, and builds your confidence — one question at a time.
+</p>
+
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   to={userId ? "/generate" : "/login"}
