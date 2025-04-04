@@ -51,9 +51,10 @@ const InterviewPreparationPage = () => {
         description: 'Your camera is now active and ready for the interview.',
       });
     } catch (error) {
-      toast.error('Camera error', {
-        description: 'Could not access your camera. Please check permissions.',
-      });
+      console.log(error)
+      // toast.error('Camera error', {
+      //   description: 'Could not access your camera. Please check permissions.',
+      // });
     }
   };
 
@@ -66,6 +67,7 @@ const InterviewPreparationPage = () => {
   const handleStartClick = (e) => {
     if (!webcamEnabled) {
       e.preventDefault();
+      console.log(error)
       toast.warning('Setup required', {
         description: 'Please enable your camera before starting the interview.',
         action: {

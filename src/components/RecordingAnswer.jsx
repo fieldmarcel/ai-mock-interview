@@ -1,100 +1,156 @@
-import React from 'react'
-import { useState } from 'react';
-import useSpeechToText from 'react-hook-speech-to-text';
-import { generateResponse } from "../lib/GeminiAiModel";
+import React, { useState, useEffect } from 'react';
 import { Mic } from 'lucide-react';
-import { Image,LucideAudioLines } from 'lucide-react'
 import { Button } from './ui/Button';
 import { toast } from 'sonner';
-const RecordingAnswer = ({currentQuestionIndex,questions}) => {
-  const [feedback, setfeedback] = useState('');
-  const [userAnswer, setuserAnswer] = useState('');
+import { doc, setDoc, collection } from 'firebase/firestore';
+import { db } from '../config/FirebaseConfig';
+import { useSpeechRecognition } from 'react-speech-recognition';
 
+const RecordingAnswer = ({ 
+  currentQuestionIndex, 
+  question, 
+  tempId,
+  isLastQuestion,
+  onAnswerSaved,
+  onSubmitAll
+}) => {
+  const [userAnswer, setUserAnswer] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Using react-speech-recognition
   const {
-    error,
-    interimResult,
-    isRecording,
-    results,
-    startSpeechToText,
-    stopSpeechToText,
-  } = useSpeechToText({
-    continuous: true,
-    useLegacyResults: false
-  });
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable
+  } = useSpeechRecognition();
 
-const saveUserAnswers= async()=>{
-  try {
-    if(isRecording){
-      stopSpeechToText()
-      if(userAnswer?.length<1){
-        toast("Your answer is too short")
-        return;    }
-  
-        const feedbackprompt = 
-        "Question: " + questions + 
-        ", User Answer: " + userAnswer + 
-        ", depending on question and user answer " +
-        "please give us rating for answer and feedback as areas of improvement if any " +
-        "in just 3-4-5 lines to improve it in JSON format with rating field and feedback field";
-              const result = await generateResponse(feedbackprompt);
-    setfeedback(result);
-    console.log( "feedback is" ,result)
-      }else{
-  
-      startSpeechToText()
-      
+  // Update user answer from speech recognition transcript
+  useEffect(() => {
+    setUserAnswer(transcript);
+  }, [transcript]);
+
+  const handleRecording = async () => {
+    if (listening) {
+      await stopRecording();
+    } else {
+      startRecording();
     }
-  } catch (error) {
-    console.error(error)
-  }
- 
-}
+  };
 
- return (
-    <div className="recording-container">
-      <Button 
-        variant="outline" 
-        className="my-10 flex items-center gap-2" 
-        onClick={saveUserAnswers}
-      >
-        {isRecording ? (
-          <>
-            <Mic className="text-red-500" />
-            <span>Stop Recording</span>
-          </>
-        ) : (
-          <>
-            <Mic />
-            <span>Start Recording</span>
-          </>
-        )}
-      </Button>
+  const startRecording = () => {
+    if (!isMicrophoneAvailable) {
+      toast.error("Microphone access is not available");
+      return;
+    }
+    
+    setUserAnswer('');
+    resetTranscript();
+  };
+
+  const stopRecording = async () => {
+    if (!userAnswer || userAnswer.trim().length < 1) {
+      toast.error("Please provide a longer answer");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await saveToFirebase(userAnswer);
+      onAnswerSaved(currentQuestionIndex);
+      console.log(`Answer saved for question ${currentQuestionIndex + 1}`);
+      toast.success("Answer saved successfully");
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save answer");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const saveToFirebase = async (answer) => {
+    try {
+      const answerRef = doc(collection(db, 'interview-answers'), 
+        `${tempId}-q${currentQuestionIndex}`);
       
-      {isRecording && (
-        <div className="recording-status">
-          <h2 className='text-red-500 flex items-center gap-2'>
-            <Mic /> Recording...
-          </h2>
-        </div>
-      )}
-      
-      <div className="transcript">
-        {results.length > 0 && (
-          <div>
-            <h3>Your Answer:</h3>
-            <p>{userAnswer}</p>
-          </div>
+      await setDoc(answerRef, {
+        questionId: currentQuestionIndex,
+        question: question.ques,
+        answer: answer,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      console.error("Firebase error:", error);
+      throw error;
+    }
+  };
+
+  if (!browserSupportsSpeechRecognition) {
+    return (
+      <div className="p-4 bg-red-100 text-red-700 rounded-lg">
+        Your browser doesn't support speech recognition. Please use Chrome or Edge.
+      </div>
+    );
+  }
+
+  if (!isMicrophoneAvailable) {
+    return (
+      <div className="p-4 bg-yellow-100 text-yellow-700 rounded-lg">
+        Microphone access is blocked. Please allow microphone permissions.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 flex-wrap">
+        <Button 
+          variant={listening ? "destructive" : "outline"}
+          className="flex items-center gap-2 flex-1 min-w-[200px]"
+          onClick={handleRecording}
+          disabled={isProcessing}
+        >
+          <Mic className={listening ? "animate-pulse" : ""} />
+          {listening ? "Stop Recording" : "Start Recording"}
+          {isProcessing && <span className="ml-2">Processing...</span>}
+        </Button>
+
+        {isLastQuestion && (
+          <Button 
+            onClick={onSubmitAll}
+            disabled={listening || !userAnswer || isProcessing}
+            className="flex-1 min-w-[200px]"
+          >
+            Submit All Answers
+          </Button>
         )}
-        {interimResult && <p className="interim">{interimResult}</p>}
       </div>
       
-      {feedback && (
-        <div className="feedback mt-4">
-          <h3>Feedback:</h3>
+      <div className="space-y-2">
+        <h3 className="font-medium">Your Answer:</h3>
+        <div className="bg-gray-50 p-3 rounded border min-h-20 max-h-40 overflow-y-auto">
+          {listening ? (
+            transcript ? (
+              <p className="whitespace-pre-wrap">{transcript}</p>
+            ) : (
+              <p className="text-gray-400 italic">Speak now, your answer will appear here...</p>
+            )
+          ) : (
+            userAnswer ? (
+              <p className="whitespace-pre-wrap">{userAnswer}</p>
+            ) : (
+              <p className="text-gray-400 italic">No answer recorded yet</p>
+            )
+          )}
         </div>
-      )}
-      
-      {error && <p className="error text-red-500">Error: {error}</p>}
+      </div>
+
+      <div className="text-sm text-gray-500 mt-2">
+        {listening && (
+          <p>Tip: Speak clearly in a quiet environment for best results</p>
+        )}
+      </div>
     </div>
   );
 };
