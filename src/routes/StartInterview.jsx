@@ -4,7 +4,7 @@ import Webcam from "react-webcam";
 import RecordingAnswer from "../components/RecordingAnswer";
 import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "../config/FirebaseConfig";
-import { Mic, ChevronRight, ChevronLeft, Clock, Pause, Play, Lightbulb } from "lucide-react";
+import { ChevronRight, ChevronLeft, Lightbulb, ArrowRight, Camera, CameraOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -17,14 +17,10 @@ const StartInterview = () => {
   const [questions, setQuestions] = useState([]);
   const [position, setPosition] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(120);
-  const [isPaused, setIsPaused] = useState(false);
   const [webcamEnabled, setWebcamEnabled] = useState(false);
-  const [activeTab, setActiveTab] = useState('questions');
   const [savedAnswers, setSavedAnswers] = useState({});
 
   const webcamRef = useRef(null);
-  const timerRef = useRef(null);
 
   // Derived state
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -52,24 +48,6 @@ const StartInterview = () => {
     }
   };
 
-  // Timer functions
-  const startTimer = () => {
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimeRemaining(prev => prev <= 0 ? 0 : prev - 1);
-    }, 1000);
-  };
-
-  const pauseTimer = () => {
-    clearInterval(timerRef.current);
-    setIsPaused(true);
-  };
-
-  const resumeTimer = () => {
-    startTimer();
-    setIsPaused(false);
-  };
-
   // Question navigation
   const handlePrevQuestion = () => {
     setCurrentQuestionIndex(prev => Math.max(0, prev - 1));
@@ -95,211 +73,229 @@ const StartInterview = () => {
   // Effects
   useEffect(() => {
     fetchInterviewQues();
-    return () => clearInterval(timerRef.current);
   }, []);
-
-  useEffect(() => {
-    if (timeRemaining === 0) {
-      clearInterval(timerRef.current);
-    }
-  }, [timeRemaining]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4">Loading interview questions...</p>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-blue-500 border-r-blue-300 border-b-blue-200 border-l-transparent mx-auto"></div>
+          <p className="text-gray-600 font-medium">Preparing your interview session</p>
+          <p className="text-sm text-gray-500">Loading questions for {position}</p>
         </div>
       </div>
     );
   }
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' + secs : secs}`;
-  };
-
   return (
-    <div className="p-2 sm:p-4 max-w-6xl mx-auto">
-      {/* Mobile Tab Navigation */}
-      <div className="flex md:hidden mb-4 border-b border-gray-200">
-        {['questions', 'camera', 'recording'].map((tab) => (
-          <button
-            key={tab}
-            className={`flex-1 py-2 px-4 text-center font-medium ${
-              activeTab === tab ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'
-            }`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+    <div className="min-h-screen bg-blue-100  border-gray-300 border-2 rounded-3xl p-4 sm:p-6 max-w-7xl mx-auto font-inter">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          {position} Interview
+        </h1>
+        <p className="text-gray-500 mt-1">
+          Practice makes perfect. Answer each question thoughtfully.
+        </p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Left column - Questions and controls */}
-        <div className={`w-full md:w-1/3 bg-white rounded-lg shadow-md p-3 sm:p-4 ${activeTab !== 'questions' && 'hidden md:block'}`}>
-          <h1 className="text-lg sm:text-xl font-bold text-blue-600 mb-3 truncate">{position} Interview</h1>
-          
-          <div className="mb-3">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-base sm:text-lg font-medium">
-                Question {currentQuestionIndex + 1} of {questions.length}
-              </h2>
-              <div className="text-sm bg-blue-100 px-2 py-1 rounded-full">
-                {formatTime(timeRemaining)}
+      <div className="flex flex-col xl:flex-row gap-6">
+        {/* Left Column - Webcam */}
+        <div className="w-full xl:w-2/5 flex flex-col">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1 flex flex-col">
+            <div className="p-5 bg-white border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-gray-800">Your Camera</h2>
+                <div className="flex items-center space-x-2">
+                  {webcamEnabled ? (
+                    <span className="flex items-center text-sm text-green-600">
+                      <Camera className="h-4 w-4 mr-1" /> Active
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-sm text-red-600">
+                      <CameraOff className="h-4 w-4 mr-1" /> Disabled
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             
-            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-              <div 
-                className="bg-blue-500 h-full rounded-full"
-                style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+            <div className="flex-1 bg-gray-900 relative">
+              <Webcam
+                ref={webcamRef}
+                mirrored={true}
+                onUserMedia={() => setWebcamEnabled(true)}
+                onUserMediaError={() => {
+                  setWebcamEnabled(false);
+                  toast.error("Camera access denied", {
+                    description: "Please enable camera permissions in your browser settings.",
+                  });
+                }}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              
+              {!webcamEnabled && (
+                <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+                  <div className="text-center p-6">
+                    <CameraOff className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-300 font-medium">Camera is disabled</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Allow access to your camera for the best experience
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Right Column - Questions */}
+        <div className="w-full xl:w-3/5 flex flex-col">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1 flex flex-col">
+            <div className="p-5 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-medium">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    onClick={handlePrevQuestion}
+                    disabled={currentQuestionIndex === 0}
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0 rounded-full"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    onClick={handleNextQuestion}
+                    disabled={isLastQuestion}
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0 rounded-full"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mt-4 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                />
+              </div>
+            </div>
+            
+            <div className="p-5 flex-1">
+              <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 mb-6">
+                <p className="text-lg font-medium text-gray-900">
+                  {questions[currentQuestionIndex]?.ques}
+                </p>
+              </div>
+              
+              <RecordingAnswer 
+                tempId={tempId} 
+                currentQuestionIndex={currentQuestionIndex}
+                question={questions[currentQuestionIndex]}
+                isLastQuestion={isLastQuestion}
+                onAnswerSaved={handleAnswerSaved}
+                onSubmitAll={handleSubmitAll}
               />
             </div>
-          </div>
-          
-          <div className="bg-gray-50 p-3 rounded-lg border mb-3 max-h-32 sm:max-h-none overflow-y-auto">
-            <p className="text-gray-800 text-sm sm:text-base">
-              {questions[currentQuestionIndex]?.ques}
-            </p>
-          </div>
-          
-          <div className="flex flex-row gap-2 mb-3">
-            <Button
-              onClick={handlePrevQuestion}
-              disabled={currentQuestionIndex === 0}
-              variant="outline"
-              className="flex-1 text-xs sm:text-sm py-1 h-8 sm:h-10"
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Prev
-            </Button>
             
-            <Button
-              onClick={handleNextQuestion}
-              disabled={isLastQuestion}
-              variant="outline"
-              className="flex-1 text-xs sm:text-sm py-1 h-8 sm:h-10"
-            >
-              Next
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="flex gap-2 mb-4">
-            {!isPaused ? (
-              <Button 
-                onClick={startTimer} 
-                className="flex-1 text-xs sm:text-sm py-1 h-8 sm:h-10" 
-                disabled={timeRemaining === 0}
-              >
-                <Play size={16} className="mr-1 h-4 w-4" />
-                Start Timer
-              </Button>
-            ) : (
-              <Button 
-                onClick={resumeTimer} 
-                className="flex-1 text-xs sm:text-sm py-1 h-8 sm:h-10" 
-                disabled={timeRemaining === 0}
-              >
-                <Play size={16} className="mr-1 h-4 w-4" />
-                Resume
-              </Button>
-            )}
-            
-            <Button 
-              onClick={pauseTimer} 
-              className="flex-1 text-xs sm:text-sm py-1 h-8 sm:h-10" 
-              disabled={!timerRef.current || timeRemaining === 0}
-            >
-              <Pause size={16} className="mr-1 h-4 w-4" />
-              Pause
-            </Button>
-          </div>
-
-          <div className="bg-blue-100 p-3 rounded-lg flex items-start text-xs sm:text-sm">
-            <Lightbulb className="text-blue-600 mr-2 mt-1 flex-shrink-0 h-4 w-4" />
-            <div>
-              <h3 className="font-semibold mb-1 text-sm">Important note</h3>
-              <p className="text-gray-700">
-                Click on "Start Recording" to begin answering. Speak clearly and provide 
-                detailed responses.
-              </p>
+            <div className="p-5 bg-gray-50 border-t border-gray-100">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                  <Lightbulb className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">Interview Tip</h3>
+                  <p className="text-gray-600 text-sm">
+                    Structure your answers using the STAR method: Situation, Task, Action, Result. 
+                    Keep responses concise (60-90 seconds) and focus on measurable outcomes.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Middle column - Camera view */}
-        <div className={`w-full md:w-1/3 ${activeTab !== 'camera' && 'hidden md:block'}`}>
-          <div className="bg-black rounded-lg overflow-hidden shadow-md aspect-video">
-            <Webcam
-              ref={webcamRef}
-              mirrored={true}
-              onUserMedia={() => setWebcamEnabled(true)}
-              onUserMediaError={() => {
-                setWebcamEnabled(false);
-                toast.error("Camera error", {
-                  description: "Could not access your camera. Please check permissions.",
-                });
-              }}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          {timeRemaining < 30 && timeRemaining > 0 && (
-            <div className="mt-2 bg-red-100 border border-red-300 text-red-600 p-2 rounded flex items-center justify-center animate-pulse text-sm">
-              <Clock className="mr-2 h-4 w-4" />
-              Time remaining: {formatTime(timeRemaining)}
-            </div>
-          )}
-        </div>
-
-        {/* Right column - Recording interface */}
-        <div className={`w-full md:w-1/3 ${activeTab !== 'recording' && 'hidden md:block'}`}>
-          <RecordingAnswer 
-            tempId={tempId} 
-            currentQuestionIndex={currentQuestionIndex}
-            question={questions[currentQuestionIndex]}
-            isLastQuestion={isLastQuestion}
-            onAnswerSaved={handleAnswerSaved}
-            onSubmitAll={handleSubmitAll}
-          />
         </div>
       </div>
 
-      {/* Sticky footer navigation for mobile */}
-      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white border-t border-gray-200 p-2 flex justify-around">
-        <button 
-          onClick={handlePrevQuestion}
-          disabled={currentQuestionIndex === 0}
-          className={`flex flex-col items-center ${currentQuestionIndex === 0 ? 'text-gray-400' : 'text-blue-600'}`}
+      {/* Progress Footer */}
+      <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div className="flex-1 w-full">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-gray-700">
+          Your progress
+        </span>
+        <span className="text-sm font-medium text-blue-600">
+          {Object.keys(savedAnswers).length}/{questions.length} completed
+        </span>
+      </div>
+      <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+        <div 
+          className="bg-gradient-to-r from-green-400 to-green-500 h-full rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${(Object.keys(savedAnswers).length / questions.length) * 100}%` }}
+        />
+      </div>
+    </div>
+    
+    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <Button
+        onClick={() => navigate(`/feedback/${tempId}`)}
+        variant="outline"
+        className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
+        size="lg"
+      >
+        View Feedback
+      </Button>
+      
+      {allQuestionsAnswered && (
+        <Button
+          onClick={handleSubmitAll}
+          className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md"
+          size="lg"
         >
-          <ChevronLeft size={20} />
-          <span className="text-xs">Prev</span>
-        </button>
-        
-        <button 
-          onClick={() => timeRemaining > 0 ? (isPaused ? resumeTimer() : startTimer()) : null} 
-          className={`flex flex-col items-center ${timeRemaining === 0 ? 'text-gray-400' : 'text-blue-600'}`}
-        >
-          <Clock size={20} />
-          <span className="text-xs">{formatTime(timeRemaining)}</span>
-        </button>
-        
-        <button 
-          onClick={handleNextQuestion}
-          disabled={isLastQuestion}
-          className={`flex flex-col items-center ${isLastQuestion ? 'text-gray-400' : 'text-blue-600'}`}
-        >
-          <ChevronRight size={20} />
-          <span className="text-xs">Next</span>
-        </button>
+          Complete Interview
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  </div>
+</div>
+      
+      {/* Mobile Navigation */}
+      <div className="xl:hidden fixed bottom-4 left-0 right-0 px-4">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-2 flex justify-between">
+          <Button 
+            onClick={handlePrevQuestion}
+            disabled={currentQuestionIndex === 0}
+            variant="ghost"
+            className={`flex-1 ${currentQuestionIndex === 0 ? 'text-gray-400' : 'text-blue-600'}`}
+          >
+            <ChevronLeft className="h-5 w-5 mr-1" />
+            Previous
+          </Button>
+          
+          <Button 
+            onClick={handleNextQuestion}
+            disabled={isLastQuestion}
+            variant="ghost"
+            className={`flex-1 ${isLastQuestion ? 'text-gray-400' : 'text-blue-600'}`}
+          >
+            Next
+            <ChevronRight className="h-5 w-5 ml-1" />
+          </Button>
+        </div>
       </div>
       
-      <div className="pb-16 md:pb-0"></div>
+      <div className="pb-20 xl:pb-0"></div>
     </div>
   );
 };

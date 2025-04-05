@@ -70,6 +70,10 @@ const Cards = ({ role, time, tempId }) => {
           </Button>
         </Link>
       </div>
+      <div>
+
+        <Link to={`/feedback/${tempId}`} className="absolute bottom-4 right-4 text-gray-500 hover:text-gray-700"/>
+      </div>
     </motion.div>
   );
 };

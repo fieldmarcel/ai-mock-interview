@@ -10,6 +10,7 @@ import User from "./routes/User"
 import Dashboard from "./routes/Dashboard";
 import InterviewPage from "./routes/InterviewPage";
 import Result from "./routes/Result";
+import Feedback from "./routes/Feedback";
 // import CreateForm from "./routes/CreateEdit.jsx";
 import AddNewInterview from "./components/AddNewInterview";
 import StartInterview from "./routes/StartInterview";
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="/interview/:tempId" element={<InterviewPage />} />
           <Route path="/interview/:tempId/start" element={<StartInterview />} />
           <Route path="/result" element={<Result/>} />
+          <Route path="/feedback/:tempId" element={<Feedback/>} />
 
 
         </Routes>

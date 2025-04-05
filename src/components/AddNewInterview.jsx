@@ -16,6 +16,8 @@ const formSchema = z.object({
   experience: z.number().min(0, "Experience must be a positive number"),
 });
 const AddNewInterview = () => {
+  const [interviewQuestions, setInterviewQuestions] = useState([]);
+
   const {userId} = useAuth();
   const [role, setRole] = useState("");
   const [description, setDescription] = useState("");
@@ -42,13 +44,13 @@ const handleSubmit = async (e) => {
       const parsedData = JSON.parse(cleanedResult);
        console.log("The parsedData is:", parsedData);
 
-      const interviewQuestions = parsedData.interviewQuestions;
+       const interviewQuestions = parsedData.interviewQuestions;
        //console.log("The interviewQuestions are:", interviewQuestions);
 
       const qaPairs = interviewQuestions.map((qa, index) => ({
         Key: index,
         question: qa.question,
-        answer: qa.answer,
+        // answer: qa.answer,
       }));
       console.log("The qaPairs are:", qaPairs);
 
@@ -62,7 +64,7 @@ const handleSubmit = async (e) => {
         role: role,
         description: description,
         experience: experience,
-        jsonMockResp: result,
+        // jsonMockResp: result,
         qaPairs: qaPairs,
         createdAt: new Date(),
         createdBy: userId,

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Mic } from 'lucide-react';
+import { Mic, MicOff, Save, Send, AlertCircle } from 'lucide-react';
 import { Button } from './ui/Button';
 import { toast } from 'sonner';
 import { doc, setDoc, collection } from 'firebase/firestore';
 import { db } from '../config/FirebaseConfig';
-import { useSpeechRecognition } from 'react-speech-recognition';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const RecordingAnswer = ({ 
   currentQuestionIndex, 
@@ -12,12 +12,14 @@ const RecordingAnswer = ({
   tempId,
   isLastQuestion,
   onAnswerSaved,
-  onSubmitAll
+  onSubmitAll,
+  onStartRecording,
+  onStopRecording
 }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Using react-speech-recognition
+  const [isPaused, setIsPaused] = useState(false);
+  
   const {
     transcript,
     listening,
@@ -26,32 +28,32 @@ const RecordingAnswer = ({
     isMicrophoneAvailable
   } = useSpeechRecognition();
 
-  // Update user answer from speech recognition transcript
+  // Update answer when transcript changes
   useEffect(() => {
-    setUserAnswer(transcript);
-  }, [transcript]);
+    if (!listening && transcript) {
+      setUserAnswer(prev => {
+        return prev ? `${prev} ${transcript}` : transcript;
+      });
+      resetTranscript();
+    }
+  }, [listening, transcript]);
 
   const handleRecording = async () => {
     if (listening) {
-      await stopRecording();
+      SpeechRecognition.stopListening();
+      setIsPaused(true);
+      onStopRecording();
     } else {
-      startRecording();
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: true });
+      setIsPaused(false);
+      onStartRecording();
     }
   };
 
-  const startRecording = () => {
-    if (!isMicrophoneAvailable) {
-      toast.error("Microphone access is not available");
-      return;
-    }
-    
-    setUserAnswer('');
-    resetTranscript();
-  };
-
-  const stopRecording = async () => {
+  const saveAnswer = async () => {
     if (!userAnswer || userAnswer.trim().length < 1) {
-      toast.error("Please provide a longer answer");
+      toast.error("Please provide an answer before saving");
       return;
     }
 
@@ -59,13 +61,16 @@ const RecordingAnswer = ({
     try {
       await saveToFirebase(userAnswer);
       onAnswerSaved(currentQuestionIndex);
-      console.log(`Answer saved for question ${currentQuestionIndex + 1}`);
       toast.success("Answer saved successfully");
     } catch (error) {
       console.error("Save error:", error);
       toast.error("Failed to save answer");
     } finally {
       setIsProcessing(false);
+      if (listening) {
+        SpeechRecognition.stopListening();
+        onStopRecording();
+      }
     }
   };
 
@@ -86,71 +91,110 @@ const RecordingAnswer = ({
     }
   };
 
+  const resetAnswer = () => {
+    setUserAnswer('');
+    resetTranscript();
+  };
+
   if (!browserSupportsSpeechRecognition) {
     return (
-      <div className="p-4 bg-red-100 text-red-700 rounded-lg">
-        Your browser doesn't support speech recognition. Please use Chrome or Edge.
-      </div>
-    );
-  }
-
-  if (!isMicrophoneAvailable) {
-    return (
-      <div className="p-4 bg-yellow-100 text-yellow-700 rounded-lg">
-        Microphone access is blocked. Please allow microphone permissions.
+      <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
+        <p className="font-medium">Speech Recognition Not Available</p>
+        <p className="text-sm mt-1">Your browser doesn't support speech recognition. Please use Chrome or Edge.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-gray-800">Your Answer:</h3>
+        <div className="flex items-center space-x-2">
+          {!isMicrophoneAvailable && (
+            <div className="px-3 py-1 bg-yellow-50 text-yellow-700 text-xs rounded-full border border-yellow-200 flex items-center">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Mic blocked
+            </div>
+          )}
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={resetAnswer}
+            disabled={!userAnswer || isProcessing}
+            className="text-xs"
+          >
+            Clear
+          </Button>
+        </div>
+      </div>
+
+      <div className={`p-4 rounded-lg border min-h-28 max-h-44 overflow-y-auto transition-colors ${listening ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+        {listening ? (
+          <p className="whitespace-pre-wrap text-gray-800 text-sm">{transcript}</p>
+        ) : userAnswer ? (
+          <p className="whitespace-pre-wrap text-gray-800 text-sm">{userAnswer}</p>
+        ) : (
+          <p className="text-gray-400 italic text-sm">No answer recorded yet</p>
+        )}
+        
+        {listening && (
+          <div className="mt-2 flex items-center">
+            <span className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></span>
+            <span className="ml-2 text-xs text-blue-600">Recording...</span>
+          </div>
+        )}
+        {isPaused && !listening && userAnswer && (
+          <div className="mt-2 flex items-center">
+            <span className="h-2 w-2 bg-yellow-500 rounded-full"></span>
+            <span className="ml-2 text-xs text-yellow-600">Paused</span>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-2 flex-wrap">
         <Button 
           variant={listening ? "destructive" : "outline"}
-          className="flex items-center gap-2 flex-1 min-w-[200px]"
+          className={`flex-1 flex items-center justify-center gap-1 ${listening ? 'bg-red-500 hover:bg-red-600' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}`}
           onClick={handleRecording}
-          disabled={isProcessing}
+          disabled={isProcessing || !isMicrophoneAvailable}
+          size="sm"
         >
-          <Mic className={listening ? "animate-pulse" : ""} />
-          {listening ? "Stop Recording" : "Start Recording"}
-          {isProcessing && <span className="ml-2">Processing...</span>}
+          {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          <span className="text-xs font-medium">{listening ? "Stop" : isPaused ? "Resume" : "Record"}</span>
+        </Button>
+
+        <Button 
+          variant="outline"
+          className="flex-1 flex items-center justify-center gap-1 border-green-300 text-green-700 hover:bg-green-50"
+          onClick={saveAnswer}
+          disabled={listening || !userAnswer || isProcessing}
+          size="sm"
+        >
+          <Save className="h-4 w-4" />
+          <span className="text-xs font-medium">Save</span>
         </Button>
 
         {isLastQuestion && (
           <Button 
+            className="flex-1 flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
             onClick={onSubmitAll}
-            disabled={listening || !userAnswer || isProcessing}
-            className="flex-1 min-w-[200px]"
+            disabled={isProcessing}
+            size="sm"
           >
-            Submit All Answers
+            <Send className="h-4 w-4" />
+            <span className="text-xs font-medium">Submit All</span>
           </Button>
         )}
       </div>
-      
-      <div className="space-y-2">
-        <h3 className="font-medium">Your Answer:</h3>
-        <div className="bg-gray-50 p-3 rounded border min-h-20 max-h-40 overflow-y-auto">
-          {listening ? (
-            transcript ? (
-              <p className="whitespace-pre-wrap">{transcript}</p>
-            ) : (
-              <p className="text-gray-400 italic">Speak now, your answer will appear here...</p>
-            )
-          ) : (
-            userAnswer ? (
-              <p className="whitespace-pre-wrap">{userAnswer}</p>
-            ) : (
-              <p className="text-gray-400 italic">No answer recorded yet</p>
-            )
-          )}
-        </div>
-      </div>
 
-      <div className="text-sm text-gray-500 mt-2">
-        {listening && (
-          <p>Tip: Speak clearly in a quiet environment for best results</p>
-        )}
-      </div>
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mb-4"></div>
+            <p className="font-medium">Saving your answer...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
