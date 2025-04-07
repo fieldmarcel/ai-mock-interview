@@ -244,6 +244,7 @@ const StartInterview = () => {
           style={{ width: `${(Object.keys(savedAnswers).length / questions.length) * 100}%` }}
         />
       </div>
+      
     </div>
     
     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
