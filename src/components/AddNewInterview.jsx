@@ -52,7 +52,7 @@ const handleSubmit = async (e) => {
         question: qa.question,
         // answer: qa.answer,
       }));
-      console.log("The qaPairs are:", qaPairs);
+      console.log("The qaPairs are given as:", qaPairs);
 
       setAiResponse(result);
       setRole("");
