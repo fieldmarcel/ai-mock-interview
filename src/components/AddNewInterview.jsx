@@ -69,7 +69,7 @@ const handleSubmit = async (e) => {
         createdAt: new Date(),
         createdBy: userId,
       });
-      console.log("Document written in Firebase:", resp);
+      console.log("Document written in Firebase in :", resp);
 
       // Validate form data
       formSchema.parse(formData);
