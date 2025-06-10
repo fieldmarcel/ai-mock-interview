@@ -33,25 +33,35 @@ const handleSubmit = async (e) => {
     setIsSubmitting(true);
     const formData = { role, description, experience: Number(experience) };
 
-    const promptData = `jobrole- ${role}  job-description-${description}, experience - ${experience} years ...depending on jobrole, job description, and years of experience provide us 10 interview questions and answers based in JSON format`;
-    const result = await generateResponse(promptData);
+const promptData = `Generate 10 interview questions and answers for:
+Job Role: ${role}
+Description: ${description}
+Experience: ${experience} years
+
+Return ONLY valid JSON in this format: 
+[{ "question": "...", "answer": "..." }]`;
+     const result = await generateResponse(promptData);
 
     const cleanedResult = result.replace(/```json/g, "").replace(/```/g, "").trim();
      console.log("The cleanedResult is:", cleanedResult);
 
     // Validate the JSON structure before parsing
     try {
-      const parsedData = JSON.parse(cleanedResult);
-       console.log("The parsedData is:", parsedData);
+        let questionsArray = [];
 
-       const interviewQuestions = parsedData.interviewQuestions;
+       const parsedData = JSON.parse(cleanedResult);
+
+          questionsArray = parsedData;
+
+      //  console.log("The parsedData is:", parsedData);
+
+      //  const interviewQuestions = parsedData.interviewQuestions;
        //console.log("The interviewQuestions are:", interviewQuestions);
 
-      const qaPairs = interviewQuestions.map((qa, index) => ({
-        Key: index,
-        question: qa.question,
-        // answer: qa.answer,
-      }));
+      const qaPairs = questionsArray.map((qa, index) => ({
+  Key: index,
+  question: qa.question,
+}));
       console.log("The qaPairs are given as:", qaPairs);
 
       setAiResponse(result);
