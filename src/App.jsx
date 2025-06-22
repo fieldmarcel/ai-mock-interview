@@ -1,5 +1,4 @@
 import React from "react";
-import { ClerkProvider } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Homepage from "./routes/Homepage";
 import Header from "./components/Header";
@@ -14,9 +13,10 @@ import Feedback from "./routes/Feedback";
 // import CreateForm from "./routes/CreateEdit.jsx";
 import AddNewInterview from "./components/AddNewInterview";
 import StartInterview from "./routes/StartInterview";
-import { HeroParallax } from "./components/ui/hero-parallax";
+ import  MiddleSection  from "./components/ui/MiddleSection";
 // import Protected from "./layouts/Protected-routes";
 // import Container from "./components/Container";
+import Plan from "./components/Plan";
 const App = () => {
   return (
     <div>
@@ -24,14 +24,15 @@ const App = () => {
            <Header />
 
         <Routes>
-          {/* Public Routes */}
+
 
           <Route
             path="/" element={
               <div className="w-full">
                 <Homepage />
-                <HeroParallax/>
-                <Footer />
+                <MiddleSection/>
+                <Plan/>
+                 <Footer />
               </div>
             }
           />
