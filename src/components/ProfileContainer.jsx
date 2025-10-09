@@ -84,7 +84,7 @@ const ProfileContainer = () => {
     <div className="flex bg-white rounded-full px-4 py-3 items-center space-x-4 shadow-sm border border-gray-100">
       <SignInButton mode="modal" redirectUrl="/">
         <button className="text-gray-700 hover:text-blue-600 transition duration-300 font-medium cursor-pointer">
-          Logins
+          Login
         </button>
       </SignInButton>
     </div>
