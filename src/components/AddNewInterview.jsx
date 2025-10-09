@@ -33,7 +33,7 @@ const handleSubmit = async (e) => {
     setIsSubmitting(true);
     const formData = { role, description, experience: Number(experience) };
 
-const promptData = `Generate 10 interview questions and answers for:
+const promptData = `Generate 1 interview questions and answers for:
 Job Role: ${role}
 Description: ${description}
 Experience: ${experience} years
@@ -96,6 +96,8 @@ Return ONLY valid JSON in this format:
           },
           icon: "🎉",
         });
+          navigate("/generate");
+
       }, 200);
     } catch (jsonError) {
       console.error("JSON Parsing Error:", jsonError);
@@ -119,7 +121,6 @@ Return ONLY valid JSON in this format:
     setIsSubmitting(false);
   }
 
-  navigate("/generate");
 };
 
   return (

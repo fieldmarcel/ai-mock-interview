@@ -13,8 +13,8 @@ const RecordingAnswer = ({
   isLastQuestion,
   onAnswerSaved,
   onSubmitAll,
-  onStartRecording,
-  onStopRecording
+  onStartRecording, // Make optional
+  onStopRecording   // Make optional
 }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,12 +42,18 @@ const RecordingAnswer = ({
     if (listening) {
       SpeechRecognition.stopListening();
       setIsPaused(true);
-      onStopRecording();
+      // Check if callback exists before calling
+      if (onStopRecording && typeof onStopRecording === 'function') {
+        onStopRecording();
+      }
     } else {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: true });
       setIsPaused(false);
-      onStartRecording();
+      // Check if callback exists before calling
+      if (onStartRecording && typeof onStartRecording === 'function') {
+        onStartRecording();
+      }
     }
   };
 
@@ -60,7 +66,9 @@ const RecordingAnswer = ({
     setIsProcessing(true);
     try {
       await saveToFirebase(userAnswer);
-      onAnswerSaved(currentQuestionIndex);
+      if (onAnswerSaved && typeof onAnswerSaved === 'function') {
+        onAnswerSaved(currentQuestionIndex);
+      }
       toast.success("Answer saved successfully");
     } catch (error) {
       console.error("Save error:", error);
@@ -69,7 +77,9 @@ const RecordingAnswer = ({
       setIsProcessing(false);
       if (listening) {
         SpeechRecognition.stopListening();
-        onStopRecording();
+        if (onStopRecording && typeof onStopRecording === 'function') {
+          onStopRecording();
+        }
       }
     }
   };
@@ -81,7 +91,7 @@ const RecordingAnswer = ({
       
       await setDoc(answerRef, {
         questionId: currentQuestionIndex,
-        question: question.ques,
+        question: question?.ques || "No question",
         answer: answer,
         timestamp: new Date()
       });

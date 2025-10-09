@@ -12,24 +12,19 @@ const NavContainer = () => {
       >
         Home
       </Link>
-      <Link
-        to="/contact"
-        className="text-gray-700 hover:text-blue-600 transition duration-300 font-medium"
-      >
-        Contact Us
-      </Link>
-      <Link
+     
+      {/* <Link
         to="/about"
         className="text-gray-700 hover:text-blue-600 transition duration-300 font-medium"
       >
         About Us
-      </Link>
-      <Link
+      </Link> */}
+      {/* <Link
         to="/services"
         className="text-gray-700 hover:text-blue-600 transition duration-300 font-medium"
       >
         Services
-      </Link>
+      </Link> */}
 {
 userId ? <Link
         to="/generate"

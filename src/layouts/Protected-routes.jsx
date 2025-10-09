@@ -11,14 +11,7 @@ if (!isLoaded){
  if(!isSignedIn){
     return <Navigate to={"/login"} replace />
  }
-//  With replace={true}:
 
-// The current page (e.g., /dashboard) is replaced by /login in the history stack.
-// The user cannot navigate back to /dashboard using the browser's "Back" button.
-// Without replace (default behavior):
-// The current page (e.g., /dashboard) remains in the history stack.
-// The user can navigate back to /dashboard using the browser's "Back" button.
-  
 return (
    children
   )

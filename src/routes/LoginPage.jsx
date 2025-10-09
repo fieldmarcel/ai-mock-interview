@@ -3,8 +3,9 @@ import { SignIn } from '@clerk/clerk-react'
 
 const LoginPage = () => {
   return (
-    <div><SignIn  path='/login'/></div>
-  )
+<div className="min-h-screen flex items-center justify-center">
+  <SignIn path="/login" />
+</div>  )
 }
 
 export default LoginPage

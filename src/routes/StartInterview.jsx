@@ -5,7 +5,7 @@ import RecordingAnswer from "../components/RecordingAnswer";
 import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "../config/FirebaseConfig";
 import { ChevronRight, ChevronLeft, Lightbulb, ArrowRight, Camera, CameraOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Fixed import path
 import { toast } from "sonner";
 
 const StartInterview = () => {
@@ -19,6 +19,8 @@ const StartInterview = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [webcamEnabled, setWebcamEnabled] = useState(false);
   const [savedAnswers, setSavedAnswers] = useState({});
+  const [resetTrigger, setResetTrigger] = useState(0);
+  const [isRecording, setIsRecording] = useState(false); // Add recording state
 
   const webcamRef = useRef(null);
 
@@ -48,13 +50,32 @@ const StartInterview = () => {
     }
   };
 
-  // Question navigation
+  // Add recording callback functions
+  const handleStartRecording = () => {
+    setIsRecording(true);
+    console.log("Recording started");
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    console.log("Recording stopped");
+  };
+
+  // Updated navigation handlers to trigger reset
   const handlePrevQuestion = () => {
-    setCurrentQuestionIndex(prev => Math.max(0, prev - 1));
+    const newIndex = Math.max(0, currentQuestionIndex - 1);
+    if (newIndex !== currentQuestionIndex) {
+      setCurrentQuestionIndex(newIndex);
+      setResetTrigger(prev => prev + 1);
+    }
   };
 
   const handleNextQuestion = () => {
-    setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1));
+    const newIndex = Math.min(questions.length - 1, currentQuestionIndex + 1);
+    if (newIndex !== currentQuestionIndex) {
+      setCurrentQuestionIndex(newIndex);
+      setResetTrigger(prev => prev + 1);
+    }
   };
 
   // Answer handling
@@ -67,13 +88,15 @@ const StartInterview = () => {
       toast.error("Please answer all questions before submitting");
       return;
     }
-    navigate(`/feedback/${tempId}`);
+    setTimeout(() => {
+      navigate(`/feedback/${tempId}`);
+    }, 500);
   };
 
   // Effects
   useEffect(() => {
     fetchInterviewQues();
-  }, []);
+  }, [tempId]); // Add tempId as dependency
 
   if (loading) {
     return (
@@ -88,7 +111,7 @@ const StartInterview = () => {
   }
 
   return (
-    <div className="min-h-screen bg-blue-100  border-gray-300 border-2 rounded-3xl p-4 sm:p-6 max-w-7xl mx-auto font-inter">
+    <div className="min-h-screen bg-blue-100 border-gray-300 border-2 rounded-3xl p-4 sm:p-6 max-w-7xl mx-auto font-inter">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -114,6 +137,12 @@ const StartInterview = () => {
                   ) : (
                     <span className="flex items-center text-sm text-red-600">
                       <CameraOff className="h-4 w-4 mr-1" /> Disabled
+                    </span>
+                  )}
+                  {isRecording && (
+                    <span className="flex items-center text-sm text-red-600">
+                      <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse mr-1"></div>
+                      Recording
                     </span>
                   )}
                 </div>
@@ -194,17 +223,20 @@ const StartInterview = () => {
             <div className="p-5 flex-1">
               <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 mb-6">
                 <p className="text-lg font-medium text-gray-900">
-                  {questions[currentQuestionIndex]?.ques}
+                  {questions[currentQuestionIndex]?.ques || "No question available"}
                 </p>
               </div>
               
               <RecordingAnswer 
+                key={`${currentQuestionIndex}-${resetTrigger}`}
                 tempId={tempId} 
                 currentQuestionIndex={currentQuestionIndex}
                 question={questions[currentQuestionIndex]}
                 isLastQuestion={isLastQuestion}
                 onAnswerSaved={handleAnswerSaved}
                 onSubmitAll={handleSubmitAll}
+                onStartRecording={handleStartRecording} // Add this
+                onStopRecording={handleStopRecording}   // Add this
               />
             </div>
             
@@ -228,48 +260,49 @@ const StartInterview = () => {
 
       {/* Progress Footer */}
       <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div className="flex-1 w-full">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700">
-          Your progress
-        </span>
-        <span className="text-sm font-medium text-blue-600">
-          {Object.keys(savedAnswers).length}/{questions.length} completed
-        </span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex-1 w-full">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">
+                Your progress
+              </span>
+              <span className="text-sm font-medium text-blue-600">
+                {Object.keys(savedAnswers).length}/{questions.length} completed
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-green-400 to-green-500 h-full rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${(Object.keys(savedAnswers).length / questions.length) * 100}%` }}
+              />
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            {allQuestionsAnswered && (
+              <Button
+                onClick={() => navigate(`/feedback/${tempId}`)}
+                variant="outline"
+                className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
+                size="lg"
+              >
+                View Feedback
+              </Button>
+            )} 
+            
+            {allQuestionsAnswered && (
+              <Button
+                onClick={handleSubmitAll}
+                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md"
+                size="lg"
+              >
+                Complete Interview
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
-      <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-        <div 
-          className="bg-gradient-to-r from-green-400 to-green-500 h-full rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${(Object.keys(savedAnswers).length / questions.length) * 100}%` }}
-        />
-      </div>
-      
-    </div>
-    
-    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-      <Button
-        onClick={() => navigate(`/feedback/${tempId}`)}
-        variant="outline"
-        className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
-        size="lg"
-      >
-        View Feedback
-      </Button>
-      
-      {allQuestionsAnswered && (
-        <Button
-          onClick={handleSubmitAll}
-          className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md"
-          size="lg"
-        >
-          Complete Interview
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      )}
-    </div>
-  </div>
-</div>
       
       {/* Mobile Navigation */}
       <div className="xl:hidden fixed bottom-4 left-0 right-0 px-4">
