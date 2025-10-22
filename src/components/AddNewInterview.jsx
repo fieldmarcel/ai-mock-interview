@@ -33,7 +33,7 @@ const handleSubmit = async (e) => {
     setIsSubmitting(true);
     const formData = { role, description, experience: Number(experience) };
 
-const promptData = `Generate 2 interview questions and answers for:
+const promptData = `Generate 10 interview questions and answers for:
 Job Role: ${role}
 Description: ${description}
 Experience: ${experience} years
