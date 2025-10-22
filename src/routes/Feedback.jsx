@@ -2,10 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../config/FirebaseConfig";
-import { generateFeedback } from "../lib/GeminiAiModel";
-
-// import { generateFeedback } from "../lib/GeminiFeedbackAnalyzer";
-import { ArrowLeft, Star, TrendingUp, AlertCircle, CheckCircle, Clock, MessageSquare, Zap, Target, Users } from "lucide-react";
+import { generateFeedback, generateIdealAnswer, compareAnswers } from "../lib/GeminiAiModel";
+import { ArrowLeft, Star, TrendingUp, AlertCircle, CheckCircle, Clock, MessageSquare, Zap, Target, Users, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -17,8 +15,12 @@ const Feedback = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [interviewData, setInterviewData] = useState(null);
   const [userAnswers, setUserAnswers] = useState([]);
+  const [idealAnswers, setIdealAnswers] = useState({});
+  const [comparisons, setComparisons] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [overallScore, setOverallScore] = useState(0);
+  const [expandedQuestions, setExpandedQuestions] = useState({});
+  const [showIdealAnswers, setShowIdealAnswers] = useState({});
 
   useEffect(() => {
     fetchInterviewData();
@@ -70,7 +72,7 @@ const Feedback = () => {
 
       // Generate AI feedback if we have answers
       if (userAnswersData.length > 0) {
-        await generateAIFeedback(interviewInfo, userAnswersData);
+        await generateComprehensiveFeedback(interviewInfo, userAnswersData);
       }
 
     } catch (error) {
@@ -81,13 +83,48 @@ const Feedback = () => {
     }
   };
 
-  const generateAIFeedback = async (interviewInfo, answers) => {
+  const generateComprehensiveFeedback = async (interviewInfo, answers) => {
     try {
       setAnalyzing(true);
       
-      const feedbackData = await generateFeedback(interviewInfo, answers);
-      setFeedback(feedbackData.feedback);
-      setOverallScore(feedbackData.overallScore || calculateOverallScore(feedbackData.feedback));
+      // Generate ideal answers and comparisons for each question
+      const idealAnswersMap = {};
+      const comparisonsMap = {};
+      let totalScore = 0;
+      
+      for (const answer of answers) {
+        // Generate ideal answer for this question
+        const idealAnswer = await generateIdealAnswer(
+          answer.question,
+          interviewInfo.role,
+          interviewInfo.description,
+          interviewInfo.experience
+        );
+        
+        idealAnswersMap[answer.id] = idealAnswer;
+        
+        // Compare user answer with ideal answer
+        const comparison = await compareAnswers(
+          answer.question,
+          idealAnswer,
+          answer.answer,
+          interviewInfo.role
+        );
+        
+        comparisonsMap[answer.id] = comparison;
+        totalScore += comparison.score || 0;
+      }
+      
+      setIdealAnswers(idealAnswersMap);
+      setComparisons(comparisonsMap);
+      
+      // Calculate overall score
+      const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 0;
+      setOverallScore(avgScore);
+      
+      // Generate overall feedback
+      const overallFeedback = await generateFeedback(interviewInfo, answers);
+      setFeedback(overallFeedback.feedback);
       
     } catch (error) {
       console.error("Error generating feedback:", error);
@@ -97,25 +134,18 @@ const Feedback = () => {
     }
   };
 
-  const calculateOverallScore = (feedback) => {
-    // Simple scoring logic based on feedback content
-    if (!feedback) return 0;
-    
-    const positiveIndicators = ['excellent', 'good', 'strong', 'well', 'properly', 'correctly'];
-    const negativeIndicators = ['poor', 'weak', 'lacking', 'improve', 'better'];
-    
-    let score = 70; // Base score
-    const text = feedback.toLowerCase();
-    
-    positiveIndicators.forEach(indicator => {
-      if (text.includes(indicator)) score += 3;
-    });
-    
-    negativeIndicators.forEach(indicator => {
-      if (text.includes(indicator)) score -= 3;
-    });
-    
-    return Math.max(0, Math.min(100, score));
+  const toggleQuestionExpand = (answerId) => {
+    setExpandedQuestions(prev => ({
+      ...prev,
+      [answerId]: !prev[answerId]
+    }));
+  };
+
+  const toggleIdealAnswer = (answerId) => {
+    setShowIdealAnswers(prev => ({
+      ...prev,
+      [answerId]: !prev[answerId]
+    }));
   };
 
   const getScoreColor = (score) => {
@@ -130,6 +160,15 @@ const Feedback = () => {
     return "bg-red-100 border-red-200";
   };
 
+  const getScoreLabel = (score) => {
+    if (score >= 90) return "Excellent";
+    if (score >= 80) return "Very Good";
+    if (score >= 70) return "Good";
+    if (score >= 60) return "Satisfactory";
+    if (score >= 50) return "Needs Improvement";
+    return "Poor";
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -142,8 +181,8 @@ const Feedback = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen  py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <Button
@@ -166,191 +205,284 @@ const Feedback = () => {
                 </p>
               </div>
               
-              <div className={`px-6 py-3 rounded-xl border-2 ${getScoreBgColor(overallScore)}`}>
+              <div className={`px-6 py-4 rounded-xl border-2 ${getScoreBgColor(overallScore)}`}>
                 <div className="text-center">
                   <span className="text-sm text-gray-600 font-medium">Overall Score</span>
-                  <div className={`text-3xl font-bold ${getScoreColor(overallScore)}`}>
+                  <div className={`text-4xl font-bold ${getScoreColor(overallScore)}`}>
                     {overallScore}/100
                   </div>
+                  <span className="text-xs text-gray-600">{getScoreLabel(overallScore)}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Questions & Answers */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Answers Review */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-                Questions & Your Answers
-              </h2>
-              
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                {userAnswers.map((answer, index) => (
-                  <div key={answer.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900 mb-2">{answer.question}</h3>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-gray-700 text-sm whitespace-pre-wrap">{answer.answer}</p>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-2">
-                          Answered on {answer.timestamp?.toDate()?.toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Detailed Analysis */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Target className="h-5 w-5 text-green-600" />
-                Detailed Analysis
-              </h2>
-              
-              {analyzing ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-green-500 border-r-green-300 border-b-green-200 border-l-transparent mx-auto mb-4"></div>
-                  <p className="text-gray-600 font-medium">AI is analyzing your responses...</p>
-                  <p className="text-sm text-gray-500">This may take a few moments</p>
-                </div>
-              ) : feedback ? (
+        {analyzing ? (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-green-500 border-r-green-300 border-b-green-200 border-l-transparent mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium text-lg">AI is analyzing your responses...</p>
+            <p className="text-sm text-gray-500 mt-2">Generating ideal answers and detailed comparisons</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Questions & Detailed Comparison */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-600" />
+                  Detailed Answer Analysis
+                </h2>
+                
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-200">
-                    <h3 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" />
-                      AI Feedback Summary
-                    </h3>
-                    <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
+                  {userAnswers.map((answer, index) => {
+                    const comparison = comparisons[answer.id];
+                    const idealAnswer = idealAnswers[answer.id];
+                    const isExpanded = expandedQuestions[answer.id];
+                    const showIdeal = showIdealAnswers[answer.id];
+                    
+                    return (
+                      <div key={answer.id} className="border-2 border-gray-200 rounded-xl overflow-hidden hover:border-blue-300 transition-all">
+                        {/* Question Header */}
+                        <div 
+                          className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 cursor-pointer"
+                          onClick={() => toggleQuestionExpand(answer.id)}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className="bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-900 mb-1">{answer.question}</h3>
+                                {comparison && (
+                                  <div className="flex items-center gap-3 mt-2">
+                                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreBgColor(comparison.score)}`}>
+                                      <span className={getScoreColor(comparison.score)}>
+                                        {comparison.score}/100
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-gray-600">
+                                      {getScoreLabel(comparison.score)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Expanded Content */}
+                        {isExpanded && (
+                          <div className="p-4 space-y-4">
+                            {/* Your Answer */}
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-blue-600" />
+                                Your Answer
+                              </h4>
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">
+                                  {answer.answer}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Ideal Answer Toggle */}
+                            <div>
+                              <button
+                                onClick={() => toggleIdealAnswer(answer.id)}
+                                className="flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-800 mb-2"
+                              >
+                                {showIdeal ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                {showIdeal ? 'Hide' : 'Show'} Ideal Answer
+                              </button>
+                              
+                              {showIdeal && idealAnswer && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                  <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">
+                                    {idealAnswer}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Comparison Analysis */}
+                            {comparison && (
+                              <div className="space-y-3">
+                                {/* Strengths */}
+                                {comparison.strengths && comparison.strengths.length > 0 && (
+                                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <h4 className="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
+                                      <CheckCircle className="h-4 w-4" />
+                                      Strengths
+                                    </h4>
+                                    <ul className="space-y-1">
+                                      {comparison.strengths.map((strength, i) => (
+                                        <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                                          <span className="text-green-600 mt-0.5">✓</span>
+                                          <span>{strength}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* Areas for Improvement */}
+                                {comparison.improvements && comparison.improvements.length > 0 && (
+                                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                    <h4 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                                      <AlertCircle className="h-4 w-4" />
+                                      Areas for Improvement
+                                    </h4>
+                                    <ul className="space-y-1">
+                                      {comparison.improvements.map((improvement, i) => (
+                                        <li key={i} className="text-sm text-orange-700 flex items-start gap-2">
+                                          <span className="text-orange-600 mt-0.5">→</span>
+                                          <span>{improvement}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* Specific Feedback */}
+                                {comparison.feedback && (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <h4 className="text-sm font-semibold text-blue-800 mb-2">Detailed Feedback</h4>
+                                    <p className="text-sm text-blue-700 leading-relaxed">
+                                      {comparison.feedback}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Overall Summary */}
+              {feedback && (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Star className="h-5 w-5 text-yellow-600" />
+                    Overall Performance Summary
+                  </h2>
+                  
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
+                    <p className="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">
                       {feedback}
                     </p>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        Strengths
-                      </h4>
-                      <ul className="text-sm text-blue-700 space-y-1">
-                        {feedback.includes('communication') && <li>• Clear communication skills</li>}
-                        {feedback.includes('technical') && <li>• Strong technical knowledge</li>}
-                        {feedback.includes('experience') && <li>• Relevant experience</li>}
-                        {feedback.includes('confident') && <li>• Confident delivery</li>}
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                      <h4 className="font-medium text-orange-800 mb-2 flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4" />
-                        Areas to Improve
-                      </h4>
-                      <ul className="text-sm text-orange-700 space-y-1">
-                        {feedback.includes('more detail') && <li>• Add more specific examples</li>}
-                        {feedback.includes('structure') && <li>• Improve answer structure</li>}
-                        {feedback.includes('technical') && feedback.includes('weak') && <li>• Technical depth needed</li>}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p>No feedback available yet</p>
                 </div>
               )}
             </div>
+
+            {/* Right Column - Metrics & Recommendations */}
+            <div className="space-y-6">
+              {/* Score Breakdown */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-purple-600" />
+                  Score Breakdown
+                </h2>
+                
+                <div className="space-y-3">
+                  {userAnswers.map((answer, index) => {
+                    const comparison = comparisons[answer.id];
+                    const score = comparison?.score || 0;
+                    
+                    return (
+                      <div key={answer.id} className="space-y-1">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 font-medium">Q{index + 1}</span>
+                          <span className={`font-bold ${getScoreColor(score)}`}>
+                            {score}/100
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all ${
+                              score >= 80 ? 'bg-green-500' : 
+                              score >= 60 ? 'bg-yellow-500' : 
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${score}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Key Recommendations */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-yellow-600" />
+                  Key Recommendations
+                </h2>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Review ideal answers to understand expected depth</span>
+                  </div>
+                  
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Use STAR method for behavioral questions</span>
+                  </div>
+                  
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Include specific examples and metrics</span>
+                  </div>
+                  
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Practice questions that scored below 70</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Steps */}
+              <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+                <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Next Steps
+                </h2>
+                
+                <div className="space-y-3">
+                  <Button className="w-full bg-white text-blue-600 hover:bg-gray-100">
+                    Practice Similar Questions
+                  </Button>
+                  
+                  <Button variant="outline" className="w-full border-white text-white hover:bg-white/10">
+                    Schedule Another Interview
+                  </Button>
+                  
+                  <Button variant="outline" className="w-full border-white text-white hover:bg-white/10">
+                    Download Report
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-
-          {/* Right Column - Metrics & Recommendations */}
-          <div className="space-y-6">
-            {/* Performance Metrics */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
-                Performance Metrics
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Completion Rate</span>
-                  <span className="font-bold text-green-600">100%</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Answer Length</span>
-                  <span className="font-bold text-blue-600">Good</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Technical Depth</span>
-                  <span className="font-bold text-yellow-600">Moderate</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Communication</span>
-                  <span className="font-bold text-green-600">Strong</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Recommendations */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-600" />
-                Quick Recommendations
-              </h2>
-              
-              <div className="space-y-3">
-                <div className="flex items-start gap-2">
-                  <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-gray-700">Practice STAR method for behavioral questions</span>
-                </div>
-                
-                <div className="flex items-start gap-2">
-                  <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-gray-700">Include specific metrics in your answers</span>
-                </div>
-                
-                <div className="flex items-start gap-2">
-                  <Star className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-gray-700">Work on technical depth for role-specific questions</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Next Steps */}
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
-              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Next Steps
-              </h2>
-              
-              <div className="space-y-3">
-                <Button className="w-full bg-white text-blue-600 hover:bg-gray-100">
-                  Practice Similar Questions
-                </Button>
-                
-                <Button variant="outline" className="w-full border-white text-white hover:bg-white/10">
-                  Schedule Another Interview
-                </Button>
-                
-                <Button variant="outline" className="w-full border-white text-white hover:bg-white/10">
-                  Download Report
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
